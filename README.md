@@ -2,6 +2,8 @@
 
 <div align="center">English ｜ <a href="./i18n/README.zh.md">中文</a></div>
 
+<br><br><br>
+
 A small Obsidian plugin to **hide the Obsidian Bases toolbar and lock header interaction on demand**.  
 You can quickly switch the state by clicking the **Lock / Unlock** button.
 

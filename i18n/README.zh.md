@@ -2,6 +2,8 @@
 
 <div align="center">中文 ｜ <a href="../README.md">English</a></div>
 
+<br><br><br>
+
 一个用于 **按需隐藏 Obsidian Bases 顶部操作栏（toolbar）并锁定表头交互** 的小插件。  通过简单点击「锁定 / 解锁」按钮，快速进行状态切换。
 
 注意：插件只在阅读模式下生效。

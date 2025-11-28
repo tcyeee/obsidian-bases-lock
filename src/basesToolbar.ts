@@ -47,7 +47,6 @@ async function processMarkdownElement(
 			embed.classList.add('bases-toolbar-hidden');
 		}
 
-		// 为所有 .base embed 添加 hover 时出现的「🔒」按钮
 		embed.classList.add('bases-lock-container');
 
 		// 避免重复创建按钮（在多次 post-process 时）
@@ -56,7 +55,7 @@ async function processMarkdownElement(
 		const button = document.createElement('button');
 		button.className = 'bases-lock-toggle';
 		button.type = 'button';
-		button.textContent = isHidden ? '🔒' : '🔓';
+		button.textContent = isHidden ? 'locked' : 'unlocked';
 
 		button.addEventListener('click', (evt) => {
 			evt.preventDefault();
@@ -240,7 +239,7 @@ async function toggleBaseLock(
 			'.bases-lock-toggle',
 		);
 		if (btn) {
-			btn.textContent = shouldHide ? '🔒' : '🔓';
+			btn.textContent = shouldHide ? 'locked' : 'unlocked';
 		}
 	}
 

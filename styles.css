@@ -12,12 +12,9 @@
 
 .internal-embed.bases-lock-container .bases-lock-toggle {
 	position: absolute;
-	right: 6px;
-	bottom: 6px;
+	right: 0px;
+	bottom: -30px;
 	z-index: 10;
-	padding: 2px 6px;
-	border-radius: 999px;
-	border: none;
 	background-color: var(--background-modifier-hover);
 	color: var(--text-normal);
 	font-size: 0.8em;

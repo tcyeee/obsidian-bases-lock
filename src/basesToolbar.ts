@@ -40,8 +40,10 @@ async function processMarkdownElement(
 
 		const normalized = normalizeTarget(src);
 
+		const isHidden = hiddenTargets.has(normalized);
+
 		// 标记需要隐藏 toolbar 的 embed（根据当前解析结果）
-		if (hiddenTargets.has(normalized)) {
+		if (isHidden) {
 			embed.classList.add('bases-toolbar-hidden');
 		}
 
@@ -54,7 +56,7 @@ async function processMarkdownElement(
 		const button = document.createElement('button');
 		button.className = 'bases-lock-toggle';
 		button.type = 'button';
-		button.textContent = '🔒';
+		button.textContent = isHidden ? '🔒' : '🔓';
 
 		button.addEventListener('click', (evt) => {
 			evt.preventDefault();
@@ -146,29 +148,36 @@ async function toggleBaseLock(
 	);
 
 	let replaced = false;
+	let newFlag: 'x' | 'o' | null = null;
+
 	let newContent = raw.replace(mdImagePattern, (match, label, src) => {
 		const normalized = normalizeTarget(src);
 		if (replaced || normalized !== targetSrc) {
 			return match;
 		}
 
-		// 解析 label，去掉末尾的 |x 或 |o
+		// 解析 label，检查/去掉末尾的 |x 或 |o
 		const parts = (label as string)
 			.split('|')
 			.map((p: string) => p.trim())
 			.filter((p: string) => p.length > 0);
 
+		let isLocked = false;
 		if (parts.length > 0) {
 			const last = parts[parts.length - 1].toLowerCase();
 			if (last === 'x' || last === 'o') {
 				parts.pop();
+				isLocked = last === 'x';
 			}
 		}
+
+		// 切换状态：x -> o（解锁），其他 -> x（上锁）
+		newFlag = isLocked ? 'o' : 'x';
 
 		const baseName =
 			parts.length > 0 ? parts.join('|') : deriveNameFromPath(normalized);
 
-		const updated = `![${baseName}|x](${normalized})`;
+		const updated = `![${baseName}|${newFlag}](${normalized})`;
 		replaced = true;
 		return updated;
 	});
@@ -194,19 +203,24 @@ async function toggleBaseLock(
 					.map((p) => p.trim())
 					.filter((p) => p.length > 0);
 
+				let isLocked = false;
 				if (parts.length > 0) {
 					const last = parts[parts.length - 1].toLowerCase();
 					if (last === 'x' || last === 'o') {
 						parts.pop();
+						isLocked = last === 'x';
 					}
 				}
+
+				// 切换状态：x -> o（解锁），其他 -> x（上锁）
+				newFlag = isLocked ? 'o' : 'x';
 
 				const baseName =
 					parts.length > 0
 						? parts.join('|')
 						: deriveNameFromPath(normalized);
 
-				const updated = `![${baseName}|x](${normalized})`;
+				const updated = `![${baseName}|${newFlag}](${normalized})`;
 				replaced = true;
 				return updated;
 			},
@@ -217,9 +231,17 @@ async function toggleBaseLock(
 
 	await plugin.app.vault.modify(file, newContent);
 
-	// 1. 立即在当前 DOM 上生效
-	if (embed) {
-		embed.classList.add('bases-toolbar-hidden');
+	// 1. 立即在当前 DOM 上生效：根据新 flag 切换 class 和按钮图标
+	if (embed && newFlag) {
+		const shouldHide = newFlag === 'x';
+		embed.classList.toggle('bases-toolbar-hidden', shouldHide);
+
+		const btn = embed.querySelector<HTMLButtonElement>(
+			'.bases-lock-toggle',
+		);
+		if (btn) {
+			btn.textContent = shouldHide ? '🔒' : '🔓';
+		}
 	}
 
 	// 2. 尝试强制刷新当前阅读视图（防止某些情况下预览不自动重渲染）

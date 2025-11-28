@@ -2,5 +2,32 @@
 .internal-embed.bases-toolbar-hidden .bases-toolbar,
 .internal-embed.bases-toolbar-hidden .bases-header,
 .internal-embed.bases-toolbar-hidden .mod-bases .view-header {
-    display: none !important;
+	display: none !important;
+}
+
+/* hover 时右下角出现的「🔒」按钮容器 */
+.internal-embed.bases-lock-container {
+	position: relative;
+}
+
+.internal-embed.bases-lock-container .bases-lock-toggle {
+	position: absolute;
+	right: 6px;
+	bottom: 6px;
+	z-index: 10;
+	padding: 2px 6px;
+	border-radius: 999px;
+	border: none;
+	background-color: var(--background-modifier-hover);
+	color: var(--text-normal);
+	font-size: 0.8em;
+	cursor: pointer;
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 0.15s ease-in-out;
+}
+
+.internal-embed.bases-lock-container:hover .bases-lock-toggle {
+	opacity: 1;
+	pointer-events: auto;
 }

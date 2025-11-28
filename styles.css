@@ -26,3 +26,12 @@
 	display: none !important;
 }
 */
+
+/* Bases Lock: 重新定义 toolbar 显示规则，配合 main.ts 中的按需隐藏逻辑 */
+.bases-toolbar {
+	display: flex !important;
+}
+
+.internal-embed.bases-toolbar-hidden .bases-toolbar {
+	display: none !important;
+}

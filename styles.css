@@ -1,37 +1,6 @@
-/*
-隐藏 Obsidian Bases 视图顶部的操作栏。
-
-原理：启用插件后，这个 CSS 会被自动加载，
-命中对应的 DOM 选择器，把 Bases 顶部工具栏隐藏。
-
-⚠️ 提示：
-- Obsidian 将来更新时，可能会调整 Bases 的 DOM 结构 / class 名。
-- 如果你发现没有生效，可以用开发者工具检查 Bases 顶部栏的元素，
-  然后把下面的选择器改成你自己找到的那个。
-*/
-
-/* 猜测的默认选择器：Bases 顶部工具栏（如果官方 class 名不同，请自行调整） */
-.bases-toolbar {
-	display: none !important;
-}
-
-/* 
-如果你的 Obsidian 版本中，Bases 顶栏在一个 header 里，
-你也可以试着取消注释下面几行，逐个验证：
-*/
-/*
-.bases-view-header,
-.is-bases-view .view-header,
-.mod-bases .view-header {
-	display: none !important;
-}
-*/
-
-/* Bases Lock: 重新定义 toolbar 显示规则，配合 main.ts 中的按需隐藏逻辑 */
-.bases-toolbar {
-	display: flex !important;
-}
-
-.internal-embed.bases-toolbar-hidden .bases-toolbar {
-	display: none !important;
+/* Bases Lock: 只对打了 .bases-toolbar-hidden 的 embed 起作用，其他 Bases 不受影响 */
+.internal-embed.bases-toolbar-hidden .bases-toolbar,
+.internal-embed.bases-toolbar-hidden .bases-header,
+.internal-embed.bases-toolbar-hidden .mod-bases .view-header {
+    display: none !important;
 }

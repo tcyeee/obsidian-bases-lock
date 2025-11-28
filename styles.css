@@ -5,6 +5,11 @@
 	display: none !important;
 }
 
+/* 上锁时，禁止点击 Bases 表头（例如列标题区域） */
+.internal-embed.bases-toolbar-hidden .bases-thead {
+	pointer-events: none !important;
+}
+
 /* hover 时右下角出现的「🔒」按钮容器 */
 .internal-embed.bases-lock-container {
 	position: relative;

@@ -118,3 +118,4 @@ At the same time:
 - `o` → restore toolbar and header interaction, button text shows **unlocked**
 
 
+

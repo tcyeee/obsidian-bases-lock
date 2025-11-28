@@ -1,9 +1,9 @@
 {
-	"id": "obsidian-bases-lock",
+	"id": "bases-lock",
 	"name": "Bases Toolbar Lock",
 	"version": "1.0.0",
 	"minAppVersion": "1.9.0",
-	"description": "隐藏 Obsidian Bases 视图顶部的操作栏。",
-	"author": "",
+	"description": "Hides the action bar at the top of the Bases view.",
+	"author": "tcyeee",
 	"isDesktopOnly": false
 }

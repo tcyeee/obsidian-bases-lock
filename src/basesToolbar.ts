@@ -1,4 +1,4 @@
-import { MarkdownPostProcessorContext, Plugin, TFile, MarkdownView } from 'obsidian';
+import { MarkdownPostProcessorContext, Plugin, TFile } from 'obsidian';
 
 export function registerBasesToolbarPostProcessor(plugin: Plugin): void {
 	plugin.registerMarkdownPostProcessor((element, ctx) => {
@@ -121,9 +121,6 @@ async function toggleBaseLock(
 
 	// 1. 立即在当前 DOM 上生效：根据新 flag 切换 class 和按钮图标
 	updateEmbedDomAfterToggle(embed, newFlag);
-
-	// 2. 尝试强制刷新当前阅读视图（防止某些情况下预览不自动重渲染）
-	forceActiveViewRerender(plugin, file);
 }
 
 function applyLockToggleToMarkdown(source: string, targetSrc: string): {
@@ -217,23 +214,6 @@ function updateEmbedDomAfterToggle(
 	const btn = embed.querySelector<HTMLButtonElement>('.bases-lock-toggle');
 	if (btn) {
 		btn.textContent = shouldHide ? 'locked' : 'unlocked';
-	}
-}
-
-function forceActiveViewRerender(plugin: Plugin, file: TFile): void {
-	const mdView = plugin.app.workspace.getActiveViewOfType(MarkdownView);
-	if (!mdView || mdView.file !== file) return;
-
-	const anyView = mdView as MarkdownView;
-	if (!anyView.previewMode?.rerender) return;
-
-	try {
-		anyView.previewMode.rerender(true);
-	} catch (e) {
-		console.warn(
-			'[obsidian-bases-lock] Failed to force preview rerender',
-			e,
-		);
 	}
 }
 

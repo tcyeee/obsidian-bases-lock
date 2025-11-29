@@ -40,7 +40,7 @@ You can also install it directly from the community plugins page:
 
 3. Open Obsidian:
    - Go to **Settings → Community plugins → Installed plugins**
-   - Enable **Bases Toolbar Lock**
+   - Enable **Bases Lock**
 
 4. Make sure the official **Bases** core plugin is enabled.
 

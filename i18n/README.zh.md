@@ -39,7 +39,7 @@
 
 3. 打开 Obsidian：
    - 进入 **设置 → 社区插件 → 已安装插件**
-   - 启用 **Bases Toolbar Lock** 插件
+   - 启用 **Bases Lock** 插件
 
 4. 确保已启用官方 **Bases** 功能（核心插件）。
 

@@ -16,10 +16,6 @@ export function registerBasesToolbarPostProcessor(plugin: Plugin): void {
 	});
 }
 
-export function clearBasesToolbarCache(): void {
-	// 目前已移除运行时缓存，这里保留占位以兼容入口调用
-}
-
 async function processMarkdownElement(
 	plugin: Plugin,
 	element: HTMLElement,

@@ -243,16 +243,12 @@ async function toggleBaseLock(
 	const mdView =
 		plugin.app.workspace.getActiveViewOfType(MarkdownView);
 	if (mdView && mdView.file === file) {
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const anyView = mdView as any;
+		const anyView = mdView as MarkdownView;
 		if (anyView.previewMode?.rerender) {
 			try {
 				anyView.previewMode.rerender(true);
 			} catch (e) {
-				console.warn(
-					'[obsidian-bases-lock] Failed to force preview rerender',
-					e,
-				);
+				console.warn('[obsidian-bases-lock] Failed to force preview rerender', e);
 			}
 		}
 	}

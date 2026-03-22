@@ -21,7 +21,7 @@ You can quickly switch the state by clicking the **Lock / Unlock** button.
 
 **Note:** The plugin only works in **Reading view**.
 
-![1](./assets/1.png)
+![1](./assets/1.gif)
 
 ## ⬇️ Installation
 
@@ -129,7 +129,6 @@ At the same time:
 
 - `x` → hide toolbar + disable `.bases-thead` click, button text shows **locked**
 - `o` → restore toolbar and header interaction, button text shows **unlocked**
-
 
 
 

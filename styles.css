@@ -1,35 +1,78 @@
 /* Bases Lock: 只对打了 .bases-toolbar-hidden 的 embed 起作用，其他 Bases 不受影响 */
-.internal-embed.bases-toolbar-hidden .bases-toolbar,
-.internal-embed.bases-toolbar-hidden .bases-header,
-.internal-embed.bases-toolbar-hidden .mod-bases .view-header {
-	display: none !important;
+
+/* ── 锁定切换按钮：wrapper 层对齐其他 bases-toolbar-item ── */
+
+.bases-lock-toggle-item {
+	padding: 0.4rem 8px;
+	border-radius: var(--radius-s);
 }
 
-/* 上锁时，禁止点击 Bases 表头（例如列标题区域） */
+.bases-lock-toggle-item:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+/* 内层 div：纯布局 */
+.bases-lock-toggle-item .bases-lock-toggle {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	cursor: pointer;
+	color: var(--text-muted);
+	font-size: var(--font-ui-small);
+	white-space: nowrap;
+	line-height: 1;
+	user-select: none;
+}
+
+.bases-lock-toggle-item:hover .bases-lock-toggle {
+	color: var(--text-normal);
+}
+
+/* 图标大小与 toolbar 其他小图标一致 */
+.bases-lock-toggle-item .bases-lock-toggle-icon svg {
+	width: var(--icon-xs);
+	height: var(--icon-xs);
+	display: block;
+}
+
+/* ── 锁定状态 ── */
+
+/* 锁定按钮：背景持续存在 */
+.internal-embed.bases-toolbar-hidden .bases-lock-toggle-item {
+	background-color: var(--background-modifier-hover);
+}
+.internal-embed.bases-toolbar-hidden .bases-lock-toggle-item .bases-lock-toggle {
+	color: var(--text-normal);
+}
+
+/* 其他 toolbar 子项：50% 灰色 + 禁止交互 */
+.internal-embed.bases-toolbar-hidden .bases-toolbar > *:not(.bases-lock-toggle-item) {
+	opacity: 0.5;
+	pointer-events: none;
+	filter: grayscale(1);
+}
+
+/* hover 时恢复其他子项的正常显示与交互 */
+.internal-embed.bases-toolbar-hidden:hover .bases-toolbar > *:not(.bases-lock-toggle-item) {
+	opacity: 1;
+	pointer-events: auto;
+	filter: none;
+}
+
+/* 上锁时隐藏 header（保留空间）；hover 时恢复 */
+.internal-embed.bases-toolbar-hidden .bases-header,
+.internal-embed.bases-toolbar-hidden .mod-bases .view-header {
+	visibility: hidden;
+}
+.internal-embed.bases-toolbar-hidden:hover .bases-header,
+.internal-embed.bases-toolbar-hidden:hover .mod-bases .view-header {
+	visibility: visible;
+}
+
+/* 上锁时禁止点击表头；hover 时恢复 */
 .internal-embed.bases-toolbar-hidden .bases-thead {
 	pointer-events: none !important;
 }
-
-/* hover 时右下角出现的「🔒」按钮容器 */
-.internal-embed.bases-lock-container {
-	position: relative;
-}
-
-.internal-embed.bases-lock-container .bases-lock-toggle {
-	position: absolute;
-	right: 0px;
-	bottom: -30px;
-	z-index: 10;
-	background-color: var(--background-modifier-hover);
-	color: var(--text-normal);
-	font-size: 0.8em;
-	cursor: pointer;
-	opacity: 0;
-	pointer-events: none;
-	transition: opacity 0.15s ease-in-out;
-}
-
-.internal-embed.bases-lock-container:hover .bases-lock-toggle {
-	opacity: 1;
-	pointer-events: auto;
+.internal-embed.bases-toolbar-hidden:hover .bases-thead {
+	pointer-events: auto !important;
 }

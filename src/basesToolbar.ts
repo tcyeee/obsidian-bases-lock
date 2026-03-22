@@ -1,9 +1,39 @@
-import { MarkdownPostProcessorContext, Plugin, TFile } from 'obsidian';
+import { MarkdownPostProcessorContext, Plugin, TFile, setIcon } from 'obsidian';
 
 export function registerBasesToolbarPostProcessor(plugin: Plugin): void {
 	plugin.registerMarkdownPostProcessor((element, ctx) => {
 		void processMarkdownElement(plugin, element, ctx);
 	});
+}
+
+function insertButtonIntoToolbar(embed: HTMLElement, button: HTMLElement): void {
+	const wrapper = document.createElement('div');
+	wrapper.className = 'bases-toolbar-item bases-lock-toggle-item';
+	wrapper.appendChild(button);
+
+	const doInsert = (): boolean => {
+		const toolbar = embed.querySelector<HTMLElement>('.bases-toolbar');
+		if (!toolbar) return false;
+
+		const newItemMenu = toolbar.querySelector<HTMLElement>('.bases-toolbar-item.bases-toolbar-new-item-menu');
+		if (newItemMenu) {
+			newItemMenu.after(wrapper);
+		} else {
+			toolbar.appendChild(wrapper);
+		}
+		return true;
+	};
+
+	if (doInsert()) return;
+
+	// Toolbar 尚未渲染，等待它出现
+	const observer = new MutationObserver((_mutations, obs) => {
+		if (doInsert()) {
+			obs.disconnect();
+		}
+	});
+
+	observer.observe(embed, { childList: true, subtree: true });
 }
 
 async function processMarkdownElement(plugin: Plugin, element: HTMLElement, ctx: MarkdownPostProcessorContext): Promise<void> {
@@ -26,12 +56,21 @@ async function processMarkdownElement(plugin: Plugin, element: HTMLElement, ctx:
 		// 避免重复创建按钮（在多次 post-process 时）
 		if (embed.querySelector('.bases-lock-toggle') !== null) return;
 
-		const button = document.createElement('button');
-		button.className = 'bases-lock-toggle';
-		button.type = 'button';
-		button.textContent = isHidden ? 'locked' : 'unlocked';
+		const toggle = document.createElement('div');
+		toggle.className = 'bases-lock-toggle';
 
-		button.addEventListener('click', (evt) => {
+		const iconEl = document.createElement('span');
+		iconEl.className = 'bases-lock-toggle-icon';
+		setIcon(iconEl, isHidden ? 'lock' : 'lock-open');
+
+		const labelEl = document.createElement('span');
+		labelEl.className = 'bases-lock-toggle-label';
+		labelEl.textContent = isHidden ? 'Locked' : 'Lock';
+
+		toggle.appendChild(iconEl);
+		toggle.appendChild(labelEl);
+
+		toggle.addEventListener('click', (evt) => {
 			evt.preventDefault();
 			evt.stopPropagation();
 
@@ -43,7 +82,7 @@ async function processMarkdownElement(plugin: Plugin, element: HTMLElement, ctx:
 			});
 		});
 
-		embed.appendChild(button);
+		insertButtonIntoToolbar(embed, toggle);
 	});
 }
 
@@ -213,7 +252,10 @@ function updateEmbedDomAfterToggle(
 
 	const btn = embed.querySelector<HTMLButtonElement>('.bases-lock-toggle');
 	if (btn) {
-		btn.textContent = shouldHide ? 'locked' : 'unlocked';
+		const iconEl = btn.querySelector<HTMLElement>('.bases-lock-toggle-icon');
+		const labelEl = btn.querySelector<HTMLElement>('.bases-lock-toggle-label');
+		if (iconEl) setIcon(iconEl, shouldHide ? 'lock' : 'lock-open');
+		if (labelEl) labelEl.textContent = shouldHide ? 'Locked' : 'Lock';
 	}
 }
 

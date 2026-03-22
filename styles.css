@@ -68,7 +68,7 @@
 .internal-embed.bases-toolbar-hidden::before {
 	content: '';
 	position: absolute;
-	top: -40px;
+	top: -30px;
 	left: 0;
 	right: 0;
 	height: 40px;
@@ -77,7 +77,7 @@
 /* overlay 默认隐藏 */
 .bases-lock-overlay {
 	position: absolute;
-	top: -40px;
+	top: -30px;
 	right: 0;
 	display: none;
 	z-index: 10;

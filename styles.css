@@ -42,7 +42,7 @@
 	background-color: var(--background-modifier-hover);
 }
 .internal-embed.bases-toolbar-hidden .bases-lock-toggle-item .bases-lock-toggle {
-	color: var(--text-normal);
+	color: var(--icon-color-active);
 }
 
 /* 其他 toolbar 子项：50% 灰色 + 禁止交互 */
@@ -59,14 +59,14 @@
 	filter: none;
 }
 
-/* 上锁时隐藏 header（保留空间）；hover 时恢复 */
+/* 上锁时隐藏 header 并去除占位空间；hover 时恢复 */
 .internal-embed.bases-toolbar-hidden .bases-header,
 .internal-embed.bases-toolbar-hidden .mod-bases .view-header {
-	visibility: hidden;
+	display: none;
 }
 .internal-embed.bases-toolbar-hidden:hover .bases-header,
 .internal-embed.bases-toolbar-hidden:hover .mod-bases .view-header {
-	visibility: visible;
+	display: revert;
 }
 
 /* 上锁时禁止点击表头；hover 时恢复 */

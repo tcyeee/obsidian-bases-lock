@@ -37,42 +37,62 @@
 
 /* ── 锁定状态 ── */
 
-/* 锁定按钮：背景持续存在 */
-.internal-embed.bases-toolbar-hidden .bases-lock-toggle-item {
-	background-color: var(--background-modifier-hover);
-}
-.internal-embed.bases-toolbar-hidden .bases-lock-toggle-item .bases-lock-toggle {
-	color: var(--icon-color-active);
+/* 锁定时：隐藏整个 toolbar（含工具栏中的锁定按钮） */
+.internal-embed.bases-toolbar-hidden .bases-toolbar {
+	display: none !important;
 }
 
-/* 其他 toolbar 子项：50% 灰色 + 禁止交互 */
-.internal-embed.bases-toolbar-hidden .bases-toolbar > *:not(.bases-lock-toggle-item) {
-	opacity: 0.5;
-	pointer-events: none;
-	filter: grayscale(1);
-}
-
-/* hover 时恢复其他子项的正常显示与交互 */
-.internal-embed.bases-toolbar-hidden:hover .bases-toolbar > *:not(.bases-lock-toggle-item) {
-	opacity: 1;
-	pointer-events: auto;
-	filter: none;
-}
-
-/* 上锁时隐藏 header 并去除占位空间；hover 时恢复 */
+/* 上锁时隐藏 header */
 .internal-embed.bases-toolbar-hidden .bases-header,
 .internal-embed.bases-toolbar-hidden .mod-bases .view-header {
 	display: none;
 }
-.internal-embed.bases-toolbar-hidden:hover .bases-header,
-.internal-embed.bases-toolbar-hidden:hover .mod-bases .view-header {
-	display: revert;
-}
 
-/* 上锁时禁止点击表头；hover 时恢复 */
+/* 上锁时禁止点击表头 */
 .internal-embed.bases-toolbar-hidden .bases-thead {
 	pointer-events: none !important;
 }
-.internal-embed.bases-toolbar-hidden:hover .bases-thead {
-	pointer-events: auto !important;
+
+/* ── 悬浮解锁按钮（overlay） ── */
+
+/* embed 作为 overlay 的定位锚点，锁定时允许子元素超出边界显示 */
+.internal-embed.bases-lock-container {
+	position: relative;
+}
+
+.internal-embed.bases-toolbar-hidden {
+	overflow: visible !important;
+}
+
+/* 在 embed 上方创建透明桥接区，确保鼠标滑向 overlay 按钮时 :hover 不中断 */
+.internal-embed.bases-toolbar-hidden::before {
+	content: '';
+	position: absolute;
+	top: -40px;
+	left: 0;
+	right: 0;
+	height: 40px;
+}
+
+/* overlay 默认隐藏 */
+.bases-lock-overlay {
+	position: absolute;
+	top: -40px;
+	right: 0;
+	display: none;
+	z-index: 10;
+}
+
+/* 锁定状态下 hover 时显示 overlay */
+.internal-embed.bases-toolbar-hidden:hover .bases-lock-overlay {
+	display: flex;
+}
+
+/* overlay 按钮颜色：始终显示激活色，表示当前处于锁定状态 */
+.bases-lock-overlay .bases-lock-toggle {
+	color: var(--icon-color-active);
+}
+
+.bases-lock-overlay:hover .bases-lock-toggle {
+	color: var(--text-normal);
 }

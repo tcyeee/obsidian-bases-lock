@@ -1,5 +1,23 @@
 import { MarkdownPostProcessorContext, Plugin, TFile, setIcon } from 'obsidian';
 
+function createToggleButton(isHidden: boolean): HTMLElement {
+	const toggle = document.createElement('div');
+	toggle.className = 'bases-lock-toggle';
+
+	const iconEl = document.createElement('span');
+	iconEl.className = 'bases-lock-toggle-icon';
+	setIcon(iconEl, isHidden ? 'lock' : 'lock-open');
+
+	const labelEl = document.createElement('span');
+	labelEl.className = 'bases-lock-toggle-label';
+	labelEl.textContent = isHidden ? 'Locked' : 'Lock';
+
+	toggle.appendChild(iconEl);
+	toggle.appendChild(labelEl);
+
+	return toggle;
+}
+
 export function registerBasesToolbarPostProcessor(plugin: Plugin): void {
 	plugin.registerMarkdownPostProcessor((element, ctx) => {
 		void processMarkdownElement(plugin, element, ctx);
@@ -36,6 +54,13 @@ function insertButtonIntoToolbar(embed: HTMLElement, button: HTMLElement): void 
 	observer.observe(embed, { childList: true, subtree: true });
 }
 
+function insertOverlayIntoEmbed(embed: HTMLElement, button: HTMLElement): void {
+	const overlay = document.createElement('div');
+	overlay.className = 'bases-lock-toggle-item bases-lock-overlay';
+	overlay.appendChild(button);
+	embed.appendChild(overlay);
+}
+
 async function processMarkdownElement(plugin: Plugin, element: HTMLElement, ctx: MarkdownPostProcessorContext): Promise<void> {
 	const hiddenTargets = await getHiddenTargetsForContext(plugin, ctx);
 	const selector = 'div.internal-embed[src$=".base"],span.internal-embed[src$=".base"],img[src$=".base"]';
@@ -56,21 +81,7 @@ async function processMarkdownElement(plugin: Plugin, element: HTMLElement, ctx:
 		// 避免重复创建按钮（在多次 post-process 时）
 		if (embed.querySelector('.bases-lock-toggle') !== null) return;
 
-		const toggle = document.createElement('div');
-		toggle.className = 'bases-lock-toggle';
-
-		const iconEl = document.createElement('span');
-		iconEl.className = 'bases-lock-toggle-icon';
-		setIcon(iconEl, isHidden ? 'lock' : 'lock-open');
-
-		const labelEl = document.createElement('span');
-		labelEl.className = 'bases-lock-toggle-label';
-		labelEl.textContent = isHidden ? 'Locked' : 'Lock';
-
-		toggle.appendChild(iconEl);
-		toggle.appendChild(labelEl);
-
-		toggle.addEventListener('click', (evt) => {
+		const clickHandler = (evt: MouseEvent) => {
 			evt.preventDefault();
 			evt.stopPropagation();
 
@@ -80,9 +91,17 @@ async function processMarkdownElement(plugin: Plugin, element: HTMLElement, ctx:
 					error,
 				);
 			});
-		});
+		};
 
-		insertButtonIntoToolbar(embed, toggle);
+		// 工具栏按钮（工具栏隐藏时一同隐藏）
+		const toolbarToggle = createToggleButton(isHidden);
+		toolbarToggle.addEventListener('click', clickHandler);
+		insertButtonIntoToolbar(embed, toolbarToggle);
+
+		// 悬浮解锁按钮（锁定 + hover 时显示，用于在工具栏隐藏时解锁）
+		const overlayToggle = createToggleButton(isHidden);
+		overlayToggle.addEventListener('click', clickHandler);
+		insertOverlayIntoEmbed(embed, overlayToggle);
 	});
 }
 
@@ -250,13 +269,13 @@ function updateEmbedDomAfterToggle(
 	const shouldHide = newFlag === 'x';
 	embed.classList.toggle('bases-toolbar-hidden', shouldHide);
 
-	const btn = embed.querySelector<HTMLButtonElement>('.bases-lock-toggle');
-	if (btn) {
+	// 同时更新工具栏按钮和悬浮 overlay 按钮
+	embed.querySelectorAll<HTMLElement>('.bases-lock-toggle').forEach((btn) => {
 		const iconEl = btn.querySelector<HTMLElement>('.bases-lock-toggle-icon');
 		const labelEl = btn.querySelector<HTMLElement>('.bases-lock-toggle-label');
 		if (iconEl) setIcon(iconEl, shouldHide ? 'lock' : 'lock-open');
 		if (labelEl) labelEl.textContent = shouldHide ? 'Locked' : 'Lock';
-	}
+	});
 }
 
 function deriveNameFromPath(path: string): string {

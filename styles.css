@@ -96,3 +96,8 @@
 .bases-lock-overlay:hover .bases-lock-toggle {
 	color: var(--text-normal);
 }
+
+/* 锁定状态下,禁止Y轴滚动 */
+.bases-lock-container .bases-view {
+	overflow-y: hidden !important;
+}

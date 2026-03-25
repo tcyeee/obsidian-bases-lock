@@ -1,7 +1,7 @@
 {
 	"id": "bases-lock",
 	"name": "Bases Lock",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"minAppVersion": "1.9.0",
 	"description": "Hides the action bar at the top of the Bases view.",
 	"author": "tcyeee",

@@ -48,7 +48,6 @@ You can also install it directly from the community plugins page:
 2. Copy these files into that folder:
    - `main.js`
    - `manifest.json`
-   - `styles.css`
 
 3. Open Obsidian:
    - Go to **Settings → Community plugins → Installed plugins**

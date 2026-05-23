@@ -1,3 +1,27 @@
+## Version 1.0.2
+
+**What's new:**
+- Refactored DOM creation to use Obsidian's native `createDiv`/`createSpan` APIs.
+- Added artifact attestation to release assets for cryptographic build provenance verification.
+
+**Installation:**
+1. Download `main.js`, `manifest.json`, and `styles.css` from the latest release.
+2. Create the folder `<Vault>/.obsidian/plugins/obsidian-bases-lock/` and place the three files inside.
+3. In Obsidian, go to **Settings → Community plugins → Installed plugins** and enable **Bases Lock**.
+4. Make sure the official **Bases** core plugin is also enabled.
+
+---
+
+**更新内容：**
+- 重构 DOM 创建，改用 Obsidian 原生 `createDiv`/`createSpan` API。
+- 新增 Release 资源的加密制品证明，支持构建来源可验证。
+
+**安装方式：**
+1. 从最新 Release 下载 `main.js`、`manifest.json`、`styles.css`。
+2. 在 Vault 中创建文件夹 `<Vault>/.obsidian/plugins/obsidian-bases-lock/`，将三个文件放入其中。
+3. 打开 Obsidian，进入 **设置 → 第三方插件 → 已安装插件**，启用 **Bases Lock**。
+4. 确保官方核心插件 **Bases** 也已启用。
+
 ## Version 1.0.1
 
 **What's new:**

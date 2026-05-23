@@ -1,15 +1,12 @@
 import { MarkdownPostProcessorContext, Plugin, TFile, setIcon } from 'obsidian';
 
 function createToggleButton(isHidden: boolean): HTMLElement {
-	const toggle = document.createElement('div');
-	toggle.className = 'bases-lock-toggle';
+	const toggle = createDiv({ cls: 'bases-lock-toggle' });
 
-	const iconEl = document.createElement('span');
-	iconEl.className = 'bases-lock-toggle-icon';
+	const iconEl = createSpan({ cls: 'bases-lock-toggle-icon' });
 	setIcon(iconEl, isHidden ? 'lock' : 'lock-open');
 
-	const labelEl = document.createElement('span');
-	labelEl.className = 'bases-lock-toggle-label';
+	const labelEl = createSpan({ cls: 'bases-lock-toggle-label' });
 	labelEl.textContent = isHidden ? 'Locked' : 'Lock';
 
 	toggle.appendChild(iconEl);
@@ -25,8 +22,7 @@ export function registerBasesToolbarPostProcessor(plugin: Plugin): void {
 }
 
 function insertButtonIntoToolbar(embed: HTMLElement, button: HTMLElement): void {
-	const wrapper = document.createElement('div');
-	wrapper.className = 'bases-toolbar-item bases-lock-toggle-item';
+	const wrapper = createDiv({ cls: 'bases-toolbar-item bases-lock-toggle-item' });
 	wrapper.appendChild(button);
 
 	const doInsert = (): boolean => {
@@ -55,8 +51,7 @@ function insertButtonIntoToolbar(embed: HTMLElement, button: HTMLElement): void 
 }
 
 function insertOverlayIntoEmbed(embed: HTMLElement, button: HTMLElement): void {
-	const overlay = document.createElement('div');
-	overlay.className = 'bases-lock-toggle-item bases-lock-overlay';
+	const overlay = createDiv({ cls: 'bases-lock-toggle-item bases-lock-overlay' });
 	overlay.appendChild(button);
 	embed.appendChild(overlay);
 }
@@ -193,14 +188,14 @@ function applyLockToggleToMarkdown(source: string, targetSrc: string): {
 
 	// 1. 优先处理 Markdown 图片语法：![name](src/base) / ![name|x](src/base) / ![name|o](src/base)
 	const mdImagePattern = /!\[([^\]]*?)\]\(([^)\s]+\.base)\)/g;
-	newContent = newContent.replace(mdImagePattern, (match, label, src) => {
+	newContent = newContent.replace(mdImagePattern, (match: string, label: string, src: string) => {
 		const normalized = normalizeTarget(src);
 		if (replaced || normalized !== targetSrc) {
 			return match;
 		}
 
 		const { baseName, nextFlag } = computeBaseNameAndNextFlag(
-			label as string,
+			label,
 			normalized,
 		);
 
@@ -215,14 +210,14 @@ function applyLockToggleToMarkdown(source: string, targetSrc: string): {
 
 		newContent = newContent.replace(
 			wikiPattern,
-			(match, src, _aliasPart, alias) => {
+			(match: string, src: string, _aliasPart: string | undefined, alias: string | undefined) => {
 				const normalized = normalizeTarget(src);
 				if (replaced || normalized !== targetSrc) {
 					return match;
 				}
 
 				const { baseName, nextFlag } = computeBaseNameAndNextFlag(
-					(alias as string | undefined) ?? '',
+					alias ?? '',
 					normalized,
 				);
 

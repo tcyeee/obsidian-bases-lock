@@ -1,3 +1,11 @@
+## Version 1.0.3
+
+- Restricted platform support to desktop only
+
+- 限制插件仅在桌面端运行
+
+---
+
 ## Version 1.0.2
 
 **What's new:**

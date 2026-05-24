@@ -38,8 +38,8 @@
 /* ── 锁定状态 ── */
 
 /* 锁定时：隐藏整个 toolbar（含工具栏中的锁定按钮） */
-.internal-embed.bases-toolbar-hidden .bases-toolbar {
-	display: none !important;
+.workspace .internal-embed.bases-toolbar-hidden .bases-toolbar {
+	display: none;
 }
 
 /* 上锁时隐藏 header */
@@ -49,8 +49,8 @@
 }
 
 /* 上锁时禁止点击表头 */
-.internal-embed.bases-toolbar-hidden .bases-thead {
-	pointer-events: none !important;
+.workspace .internal-embed.bases-toolbar-hidden .bases-thead {
+	pointer-events: none;
 }
 
 /* ── 悬浮解锁按钮（overlay） ── */
@@ -60,8 +60,8 @@
 	position: relative;
 }
 
-.internal-embed.bases-toolbar-hidden {
-	overflow: visible !important;
+.workspace .internal-embed.bases-toolbar-hidden {
+	overflow: visible;
 }
 
 /* 在 embed 上方创建透明桥接区，确保鼠标滑向 overlay 按钮时 :hover 不中断 */
@@ -98,6 +98,6 @@
 }
 
 /* 锁定状态下,禁止Y轴滚动 */
-.bases-lock-container .bases-view {
-	overflow-y: hidden !important;
+.workspace .bases-lock-container .bases-view {
+	overflow-y: hidden;
 }

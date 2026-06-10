@@ -1,4 +1,4 @@
-import { MarkdownPostProcessorContext, Plugin, TFile, setIcon } from 'obsidian';
+import { MarkdownPostProcessorContext, MarkdownRenderChild, Plugin, TFile, setIcon } from 'obsidian';
 
 function createToggleButton(isHidden: boolean): HTMLElement {
 	const toggle = createDiv({ cls: 'bases-lock-toggle' });
@@ -21,7 +21,7 @@ export function registerBasesToolbarPostProcessor(plugin: Plugin): void {
 	});
 }
 
-function insertButtonIntoToolbar(embed: HTMLElement, button: HTMLElement): void {
+function insertButtonIntoToolbar(embed: HTMLElement, button: HTMLElement, ctx: MarkdownPostProcessorContext): void {
 	const wrapper = createDiv({ cls: 'bases-toolbar-item bases-lock-toggle-item' });
 	wrapper.appendChild(button);
 
@@ -48,6 +48,11 @@ function insertButtonIntoToolbar(embed: HTMLElement, button: HTMLElement): void 
 	});
 
 	observer.observe(embed, { childList: true, subtree: true });
+
+	// embed 从渲染树卸载时兜底断开，避免 toolbar 始终未出现导致 observer 泄漏
+	const child = new MarkdownRenderChild(embed);
+	child.register(() => observer.disconnect());
+	ctx.addChild(child);
 }
 
 function insertOverlayIntoEmbed(embed: HTMLElement, button: HTMLElement): void {
@@ -91,7 +96,7 @@ async function processMarkdownElement(plugin: Plugin, element: HTMLElement, ctx:
 		// 工具栏按钮（工具栏隐藏时一同隐藏）
 		const toolbarToggle = createToggleButton(isHidden);
 		toolbarToggle.addEventListener('click', clickHandler);
-		insertButtonIntoToolbar(embed, toolbarToggle);
+		insertButtonIntoToolbar(embed, toolbarToggle, ctx);
 
 		// 悬浮解锁按钮（锁定 + hover 时显示，用于在工具栏隐藏时解锁）
 		const overlayToggle = createToggleButton(isHidden);
@@ -223,7 +228,8 @@ function applyLockToggleToMarkdown(source: string, targetSrc: string): {
 
 				newFlag = nextFlag;
 				replaced = true;
-				return `![${baseName}|${nextFlag}](${normalized})`;
+				// 保持 wiki 链接格式回写：路径可能含空格，转成 Markdown 图片语法会产生坏链
+				return `![[${normalized}|${baseName}|${nextFlag}]]`;
 			},
 		);
 	}

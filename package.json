@@ -1,7 +1,7 @@
 {
-	"name": "obsidian-sample-plugin",
-	"version": "1.0.2",
-	"description": "This is a sample plugin for Obsidian (https://obsidian.md)",
+	"name": "obsidian-bases-lock",
+	"version": "1.0.3",
+	"description": "Hides the action bar at the top of the Bases view.",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
@@ -15,7 +15,7 @@
 		"@types/node": "^16.11.6",
 		"@typescript-eslint/eslint-plugin": "8.59.4",
 		"@typescript-eslint/parser": "8.59.4",
-		"esbuild": "0.17.3",
+		"esbuild": "0.25.12",
 		"obsidian": "latest",
 		"tslib": "2.4.0",
 		"typescript": "5.9.3"

@@ -2,121 +2,83 @@
 
 <div align="center">中文 ｜ <a href="../README.md">English</a></div>
 
-<br><br><br>
+<br><br>
 
-一个用于 **按需隐藏 Obsidian Bases 顶部操作栏（toolbar）并锁定表头交互** 的小插件。  通过简单点击「锁定 / 解锁」按钮，快速进行状态切换。
+**Bases Lock** 是一个 Obsidian 小插件，可以 **按需隐藏 Bases 顶部操作栏（toolbar）并禁用表头交互**，让页面更简洁，同时避免误操作。
 
-注意：插件只在阅读模式下生效。
+**注意：** 插件仅在 **阅读模式** 下生效，且 **仅支持桌面端**。
 
-![1](./assets/1.gif)
+![demo](../assets/1.gif)
+
+## ⭐ 使用方法
+
+1. 在 **阅读模式** 下打开一篇嵌入了 Base 的笔记。
+2. 将鼠标悬停在 Base 上，右上角会出现「锁定」按钮。
+3. 点击按钮，即可在 **锁定** 与 **解锁** 之间切换。
+
+锁定后：
+
+- 隐藏 Bases 操作栏
+- 禁止表头（列）交互
+- 只影响当前文档中的 `.base` 引用，不会扫描或修改其他笔记
 
 ## ⬇️ 安装
 
-### 通过社区插件（推荐）
+1. 打开 Obsidian，进入 **设置 → 社区插件**
+2. 点击 **浏览**，搜索 **"Bases lock"**
+3. 点击 **安装**，然后启用该插件
+4. 确保官方 **Bases** 核心插件也已启用
 
-你可以直接在 Obsidian 的社区插件商店中安装本插件：
+也可以直接通过这个链接安装：[点击安装](https://community.obsidian.md/plugins/bases-lock)
 
-1. 打开 Obsidian，进入 设置 → 社区插件
-2. 点击“浏览”，搜索 “Bases lock”
-3. 点击“安装”，然后启用该插件
+## ❓ 工作原理
 
-你也可以在社区插件页面中直接安装：[点击安装](https://obsidian.md/plugins?id=bases-lock)。
+点击锁定按钮后，插件会改写笔记中该 Base 的嵌入语法，因此锁定/解锁状态会随笔记一起保存。
 
-
-
-### 手动安装（本地开发版）
-
-1. 在你的 Vault 中创建插件目录：
-
-```text
-<Vault>/.obsidian/plugins/obsidian-bases-lock/
-```
-
-2. 将以下文件复制到该目录：
-   - `main.js`
-   - `manifest.json`
-   - `styles.css`
-
-3. 打开 Obsidian：
-   - 进入 **设置 → 社区插件 → 已安装插件**
-   - 启用 **Bases Lock** 插件
-
-4. 确保已启用官方 **Bases** 功能（核心插件）。
-
-
-
-## ⭐使用
-
-1. 鼠标移动到bases上，会出现“locked”按钮。
-2. 点击锁定/解锁。
-
-
-
-## 开发与构建
-
-- **依赖安装：**
-
-```bash
-npm install
-```
-
-- **开发模式（watch 构建）：**
-
-```bash
-npm run dev
-```
-
-- **生产构建：**
-
-```bash
-npm run build
-```
-
-构建完成后会在插件根目录生成最新的 `main.js`，供 Obsidian 加载。
-
-
-
-### 注意事项
-
-- 插件只在 **阅读模式** 下渲染按钮并控制 toolbar / 表头行为。
-- 选择器（例如 `.bases-toolbar`、`.bases-header`、`.bases-thead` 等）依赖当前 Obsidian 版本的 Bases DOM 结构：
-  - 如果将来 Obsidian 更新导致 class 变化，可以通过开发者工具查看实际 class 并在 `styles.css` 中自行调整选择器。
-- 插件只根据当前文档中 `.base` 引用的语法（`|x` / `|o`）做出判断，不会扫描或修改其他文档。***
-
-
-
-### 设计思路
-
-假设 `src/a.base` 被引用为以下几种形式之一：
+例如，`src/a.base` 以下列任意形式被引用：
 
 - `![[src/a.base]]`
 - `![My Base](src/a.base)`
 - `![My Base|o](src/a.base)`
-- `![My Base|x](src/a.base)`
 
-点击按钮后的效果：
-
-- 从 **未上锁 → 上锁**
-  - 上述任意形式会被统一改写为：
+点击 **锁定** 后，都会被统一改写为：
 
 ```markdown
 ![My Base|x](src/a.base)
 ```
 
-  - 若原本没有名称（如 `![[src/a.base]]`），则使用文件名（去掉 `.base` 后缀）作为名称：
+（如果原本没有显示名称，会自动使用文件名作为名称，例如 `![[src/a.base]]` → `![a|x](src/a.base)`。）
 
-```markdown
-![[src/a.base]]  →  ![a|x](src/a.base)
-```
-
-- 从 **上锁 → 解锁**
-  - 如果当前为 `![My Base|x](src/a.base)`，点击后会改为：
+再次点击 **解锁** 后，会变为：
 
 ```markdown
 ![My Base|o](src/a.base)
 ```
 
-同时：
+简单来说：
 
-- `x` → 隐藏 toolbar + 禁止 `.bases-thead` 点击，按钮显示 `locked`
-- `o` → 恢复 toolbar 和表头交互，按钮显示 `unlocked`
+- `|x` → 隐藏操作栏、禁止表头交互，按钮显示 **locked**
+- `|o` → 恢复操作栏和表头交互，按钮显示 **unlocked**
+
+### 页面内 base 代码块
+
+Base 也可以直接以代码块的形式写在笔记正文中：
+
+````markdown
+```base
+views:
+  - type: table
+```
+````
+
+插件同样支持这种写法。锁定时会在围栏语言标记后追加一个 `x` 标记：
+
+````markdown
+```base x
+views:
+  - type: table
+```
+````
+
+解锁时会去掉该标记。每个代码块的锁定状态相互独立，因此同一篇笔记里可以同时混用 `.base` 文件嵌入和页面内 base 代码块。
+

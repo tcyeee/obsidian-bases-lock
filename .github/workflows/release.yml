@@ -39,7 +39,23 @@ jobs:
         run: |
           tag="${GITHUB_REF#refs/tags/}"
 
-          gh release create "$tag" \
-            --title="$tag" \
-            --draft \
-            main.js manifest.json styles.css
+          # actions/checkout leaves a lightweight ref for the tag (pointing at the
+          # commit, not the annotated tag object), so re-fetch it by name first —
+          # otherwise %(contents) silently returns the commit message instead of
+          # the real annotated tag message.
+          git fetch origin "refs/tags/$tag:refs/tags/$tag" --force
+
+          notes="$(git tag -l --format='%(contents)' "$tag")"
+
+          if [ -n "$notes" ]; then
+            echo "$notes" > /tmp/release-notes.md
+            gh release create "$tag" \
+              --title="$tag" \
+              --notes-file /tmp/release-notes.md \
+              main.js manifest.json styles.css
+          else
+            gh release create "$tag" \
+              --title="$tag" \
+              --generate-notes \
+              main.js manifest.json styles.css
+          fi

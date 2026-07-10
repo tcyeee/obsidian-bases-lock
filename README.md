@@ -14,120 +14,83 @@
 
 <div align="center">English ｜ <a href="./i18n/README.zh.md">中文</a></div>
 
-<br><br><br>
+<br><br>
 
-A small Obsidian plugin to **hide the Obsidian Bases toolbar and lock header interaction on demand**.  
-You can quickly switch the state by clicking the **Lock / Unlock** button.
+**Bases Lock** is a small Obsidian plugin that lets you **hide the Bases toolbar and disable header interaction** on demand, keeping the view clean and preventing accidental changes.
 
-**Note:** The plugin only works in **Reading view**.
+**Note:** The plugin only works in **Reading view**, and is **desktop only**.
 
-![1](./assets/1.gif)
-
-## ⬇️ Installation
-
-### From community plugins (recommended)
-
-You can install this plugin directly from Obsidian’s community plugins browser:
-
-1. Open Obsidian and go to **Settings → Community plugins**
-2. Select **Browse** and search for **“Bases lock”**
-3. Click **Install**, then enable the plugin
-
-You can also install it directly from the community plugins page:  
-[Install from community plugins](https://obsidian.md/plugins?id=bases-lock)
-
-
-### Manual install (local/dev build)
-
-1. Create the plugin folder inside your vault:
-
-```text
-<Vault>/.obsidian/plugins/obsidian-bases-lock/
-```
-
-2. Copy these files into that folder:
-   - `main.js`
-   - `manifest.json`
-
-3. Open Obsidian:
-   - Go to **Settings → Community plugins → Installed plugins**
-   - Enable **Bases Lock**
-
-4. Make sure the official **Bases** core plugin is enabled.
-
+![demo](./assets/1.gif)
 
 ## ⭐ Usage
 
-1. Move your mouse over a Base; a **locked** button will appear.
-2. Click it to toggle **lock / unlock**.
+1. Open a note in **Reading view** that embeds a Base.
+2. Hover your mouse over the Base — a **lock** button appears in the corner.
+3. Click it to toggle between **locked** and **unlocked**.
 
+That's it — while locked:
 
-## Development & build
+- The Bases toolbar is hidden
+- Header (column) interaction is disabled
+- Only the `.base` embed in the current document is affected — other notes are never scanned or modified
 
-- **Install dependencies:**
+## ⬇️ Installation
 
-```bash
-npm install
-```
+1. Open Obsidian and go to **Settings → Community plugins**
+2. Select **Browse** and search for **"Bases lock"**
+3. Click **Install**, then enable the plugin
+4. Make sure the official **Bases** core plugin is also enabled
 
-- **Development mode (watch build):**
+Or install it directly here: [Install from Community Plugins](https://community.obsidian.md/plugins/bases-lock)
 
-```bash
-npm run dev
-```
+## ❓ How it works
 
-- **Production build:**
+When you click the lock button, the plugin rewrites how the Base is embedded in your Markdown, so the locked/unlocked state is saved with the note.
 
-```bash
-npm run build
-```
-
-After building, the latest `main.js` will be generated in the plugin root folder for Obsidian to load.
-
-
-### Notes
-
-- The plugin only renders the button and controls toolbar / header behavior in **Reading view**.
-- The selectors (such as `.bases-toolbar`, `.bases-header`, `.bases-thead`, etc.) depend on the current Obsidian Bases DOM structure:
-  - If a future Obsidian update changes these classes, you can inspect the actual classes via DevTools and adjust the selectors in `styles.css`.
-- The plugin only looks at the `.base` embed syntax (`|x` / `|o`) in the **current document** and does not scan or modify other notes.
-
-
-### Design rationale
-
-Assume `src/a.base` is embedded in any of the following forms:
+For example, `src/a.base` embedded as any of the following:
 
 - `![[src/a.base]]`
 - `![My Base](src/a.base)`
 - `![My Base|o](src/a.base)`
-- `![My Base|x](src/a.base)`
 
-After clicking the button:
-
-- From **unlocked → locked**
-  - Any of the forms above will be normalized to:
+...becomes this when **locked**:
 
 ```markdown
 ![My Base|x](src/a.base)
 ```
 
-  - If there was no display name (for example `![[src/a.base]]`), the file name (without the `.base` suffix) will be used:
+(If there was no display name, the file name is used automatically — e.g. `![[src/a.base]]` → `![a|x](src/a.base)`.)
 
-```markdown
-![[src/a.base]]  →  ![a|x](src/a.base)
-```
-
-- From **locked → unlocked**
-  - If the current syntax is `![My Base|x](src/a.base)`, it will be changed to:
+Clicking again to **unlock** changes it to:
 
 ```markdown
 ![My Base|o](src/a.base)
 ```
 
-At the same time:
+In short:
 
-- `x` → hide toolbar + disable `.bases-thead` click, button text shows **locked**
-- `o` → restore toolbar and header interaction, button text shows **unlocked**
+- `|x` → toolbar hidden, header interaction disabled, button shows **locked**
+- `|o` → toolbar and header interaction restored, button shows **unlocked**
 
+### Inline `base` code blocks
 
+Bases can also be written directly as a code block inside a note:
+
+````markdown
+```base
+views:
+  - type: table
+```
+````
+
+This is supported too. Locking it appends an `x` flag right after the fence's language token:
+
+````markdown
+```base x
+views:
+  - type: table
+```
+````
+
+Unlocking removes the flag again. Each code block is toggled independently, so a note can freely mix multiple `.base` embeds and inline `base` code blocks.
 

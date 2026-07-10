@@ -1,3 +1,17 @@
+## Version 1.0.4
+
+- Added support for locking inline `base` code blocks, not just embedded `.base` files
+- Fixed base code block locking failing silently for CRLF line endings or blocks nested in callouts/blockquotes
+- Fixed a rare case where toggling two base embeds in quick succession could silently discard one of the changes
+- Fixed the release workflow publishing draft releases instead of live ones
+
+- 新增支持锁定页面内的 base 代码块，不再局限于嵌入的 .base 文件
+- 修复 CRLF 换行或嵌套在 callout/引用块中的 base 代码块无法锁定的问题
+- 修复快速连续切换两个 base 时可能静默丢失其中一次修改的问题
+- 修复 Release 工作流发布草稿而非正式版本的问题
+
+---
+
 ## Version 1.0.3
 
 - Restricted platform support to desktop only

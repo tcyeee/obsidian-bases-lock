@@ -35,6 +35,15 @@
 	display: block;
 }
 
+/* 窄嵌入块里跟随原生按钮一起折叠成纯图标。
+   Obsidian 在 .bases-header 的容器查询（width < 540px）里把
+   --bases-toolbar-label-display 置为 none，这里直接消费该变量，
+   既不用硬编码断点，也能跟着官方一起变。
+   overlay 不在 .bases-header 内，取到根上的 block，文字始终保留。 */
+.bases-lock-toggle-item .bases-lock-toggle-label {
+	display: var(--bases-toolbar-label-display, block);
+}
+
 /* ── 锁定状态 ── */
 
 /* 锁定时：隐藏整个 toolbar（含工具栏中的锁定按钮） */
@@ -59,26 +68,35 @@
 /* embed 作为 overlay 的定位锚点，锁定时允许子元素超出边界显示 */
 .bases-lock-container {
 	position: relative;
+
+	/* overlay 上浮的距离，桥接区靠它保持同步 */
+	--bases-lock-overlay-offset: 30px;
+
+	/* 桥接区的横向宽度，取按钮本身的量级即可 */
+	--bases-lock-bridge-width: 160px;
 }
 
 .workspace .bases-lock-container.bases-toolbar-hidden {
 	overflow: visible;
 }
 
-/* 在 embed 上方创建透明桥接区，确保鼠标滑向 overlay 按钮时 :hover 不中断 */
+/* 在 embed 上方创建透明桥接区，确保鼠标滑向 overlay 按钮时 :hover 不中断。
+   只覆盖 overlay 正下方的右侧一小块：铺满整行会盖在上一段正文上，
+   吞掉那里的点击和文本选择。 */
 .bases-lock-container.bases-toolbar-hidden::before {
 	content: '';
 	position: absolute;
-	top: -30px;
-	left: 0;
+	top: calc(-1 * var(--bases-lock-overlay-offset));
 	right: 0;
-	height: 40px;
+	width: var(--bases-lock-bridge-width);
+	height: calc(var(--bases-lock-overlay-offset) + 2px);
 }
 
-/* overlay 默认隐藏 */
+/* overlay 默认隐藏：解锁态由工具栏里的按钮承担，这里不重复出现一个
+   悬浮按钮。节点本身两种状态都要保留，见 lockToggleUi.ts 的说明。 */
 .bases-lock-overlay {
 	position: absolute;
-	top: -30px;
+	top: calc(-1 * var(--bases-lock-overlay-offset));
 	right: 0;
 	display: none;
 	z-index: 10;

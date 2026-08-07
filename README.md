@@ -25,8 +25,8 @@
 ## ⭐ Usage
 
 1. Open a note in **Reading view** that embeds a Base.
-2. Hover your mouse over the Base — a **lock** button appears in the corner.
-3. Click it to toggle between **locked** and **unlocked**.
+2. Click the **Lock** button in the Base's toolbar to lock it. The toolbar then disappears.
+3. To unlock, hover your mouse over the locked Base — a **lock** button appears just above its top-right corner. Click it.
 
 That's it — while locked:
 

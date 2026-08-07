@@ -34,6 +34,9 @@ export function insertButtonIntoToolbar(embed: HTMLElement, button: HTMLElement,
 		const toolbar = embed.querySelector<HTMLElement>('.bases-toolbar');
 		if (!toolbar) return false;
 
+		// 放在图标组的最后一个：new-item-menu 是 Obsidian 原生工具栏的末位 item。
+		// 窄宽度下这个位置最容易被挤出可视区域，靠 styles.css 里跟随
+		// --bases-toolbar-label-display 折叠成纯图标来控制占位宽度。
 		const newItemMenu = toolbar.querySelector<HTMLElement>('.bases-toolbar-item.bases-toolbar-new-item-menu');
 		if (newItemMenu) {
 			newItemMenu.after(wrapper);
@@ -72,18 +75,25 @@ export function attachLockToggleUi(
 	isHidden: boolean,
 	onToggle: (evt: MouseEvent) => void,
 ): void {
-	if (isHidden) embed.classList.add('bases-toolbar-hidden');
 	embed.classList.add('bases-lock-container');
+
+	// 把源码里的状态同步到 class 和（如果已存在的话）按钮图标上。
+	// 必须是 toggle 而不是 add：用户手改笔记里的 flag 会让 post-process 重跑，
+	// 只加不删会把 embed 卡在上一次的锁定状态。
+	updateEmbedDomAfterToggle(embed, isHidden ? 'x' : 'o');
 
 	// 避免重复创建按钮（在多次 post-process 时）
 	if (embed.querySelector('.bases-lock-toggle') !== null) return;
 
-	// 工具栏按钮（工具栏隐藏时一同隐藏）
+	// 工具栏按钮：解锁态的入口，工具栏隐藏时一同隐藏
 	const toolbarToggle = createToggleButton(isHidden);
 	toolbarToggle.addEventListener('click', onToggle);
 	insertButtonIntoToolbar(embed, toolbarToggle, ctx);
 
-	// 悬浮解锁按钮（锁定 + hover 时显示，用于在工具栏隐藏时解锁）
+	// 悬浮解锁按钮：锁定 + hover 时显示，是工具栏隐藏后唯一的解锁入口。
+	// 两种初始状态下都要建：切换锁定不会重新渲染 embed，updateEmbedDomAfterToggle
+	// 只是翻 class，所以初始解锁的 embed 被锁上之后仍要用到这个节点。
+	// 解锁态它由 CSS 保持 display:none —— 那时工具栏按钮已经可见，不必重复。
 	const overlayToggle = createToggleButton(isHidden);
 	overlayToggle.addEventListener('click', onToggle);
 	insertOverlayIntoEmbed(embed, overlayToggle);

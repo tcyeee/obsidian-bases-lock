@@ -1,3 +1,17 @@
+## Version 1.0.5
+
+- Fixed a locked Base staying stuck in its previous state when the `x`/`o` flag was edited by hand in the note
+- Fixed the invisible hover bridge above a locked Base covering the paragraph above it, swallowing its clicks and text selection
+- The toolbar lock button now collapses to icon-only in narrow embeds, matching Obsidian's own toolbar buttons
+- Clarified the usage instructions in the README
+
+- 修复手动改写笔记里的 `x`/`o` 标记后，Base 仍停留在上一次锁定状态的问题
+- 修复已锁定 Base 上方的透明悬停桥接区盖住上一段正文，吞掉其点击与文本选择的问题
+- 操作栏里的锁定按钮在窄嵌入块中改为仅显示图标，与 Obsidian 原生按钮保持一致
+- 完善 README 的使用说明
+
+---
+
 ## Version 1.0.4
 
 - Added support for locking inline `base` code blocks, not just embedded `.base` files

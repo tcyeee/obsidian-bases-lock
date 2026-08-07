@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-bases-lock",
-	"version": "1.0.4",
+	"version": "1.0.5",
 	"description": "Hides the action bar at the top of the Bases view.",
 	"main": "main.js",
 	"scripts": {

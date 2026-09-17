@@ -1,3 +1,13 @@
+## Version 1.0.6
+
+- Enabled mobile support
+- On mobile, the unlock button now stays visible while locked (no hover on touch) and shows only its icon to save space
+
+- 新增移动端支持
+- 移动端锁定状态下解锁按钮常驻显示（触屏无 hover），且仅保留图标以节省空间
+
+---
+
 ## Version 1.0.5
 
 - Fixed a locked Base staying stuck in its previous state when the `x`/`o` flag was edited by hand in the note

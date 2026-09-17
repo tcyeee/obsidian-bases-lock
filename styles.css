@@ -107,9 +107,19 @@
 	display: flex;
 }
 
+/* 移动端没有 hover，overlay 常驻显示，否则锁定后无法解锁 */
+body.is-mobile .bases-lock-container.bases-toolbar-hidden .bases-lock-overlay {
+	display: flex;
+}
+
 /* overlay 按钮颜色：始终显示激活色，表示当前处于锁定状态 */
 .bases-lock-overlay .bases-lock-toggle {
 	color: var(--icon-color-active);
+}
+
+/* 移动端空间有限，解锁悬浮按钮只保留图标 */
+body.is-mobile .bases-lock-overlay .bases-lock-toggle-label {
+	display: none;
 }
 
 .bases-lock-overlay:hover .bases-lock-toggle {

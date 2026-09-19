@@ -16,18 +16,17 @@ import { getOwningMarkdownFile } from './markdownFile';
  *
  * ```` ```base x ```` （锁定） / ```` ```base ```` （解锁）
  *
- * 定位与改写该围栏行依赖 `ctx.getSectionInfo(el)`，它能返回当前元素
+ * 定位与改写该围栏行优先依赖 `ctx.getSectionInfo(el)`，它能返回当前元素
  * 对应源码片段的起止行号，从而精确修改「这一个」代码块，不影响同一
  * 笔记里的其他 base 代码块。
  *
- * `getSectionInfo` 官方文档注明它在很多情况下会返回 null——比如这篇笔记
- * 不是由它自己的 Reading View 渲染，而是被其他插件（侧边栏预览、自定义
- * 面板等）用 `MarkdownRenderer.render()` 单独渲染出来时。这种情况下退化
- * 为「按出现顺序配对」兜底：这次渲染批次里这个 embed 是第几个
- * `.block-language-base`，就对应文件源码里第几个 base 围栏——前提是这次
- * 渲染批次里出现的代码块总数与文件里的围栏总数完全一致，否则说明这只是
- * 笔记的局部片段，顺序对应关系不可信，直接安全放弃而不是瞎猜，避免误切
- * 换到错误的代码块。
+ * `getSectionInfo` 官方文档注明它在很多情况下会返回 null，此时需要兜底定位：
+ * - 笔记 B 被另一篇笔记 A 用 `![[B]]` 嵌入时，B 内的代码块不再是 A 渲染文档的
+ *   顶层子元素。此时用 `ctx.sourcePath` 找到真正的源文件，并在
+ *   `.markdown-embed-content` 范围内按「第几个 base 代码块」做序数匹配。
+ * - 笔记被侧边栏预览、自定义面板等用 `MarkdownRenderer.render()` 单独渲染时，
+ *   退化为「按出现顺序配对」：这次渲染批次里的代码块总数必须与文件里的围栏
+ *   总数一致，否则顺序对应关系不可信，直接安全放弃而不是瞎猜。
  */
 
 const CODE_BLOCK_SELECTOR = 'div.block-language-base';
@@ -59,6 +58,58 @@ export async function processCodeBlockBaseEmbeds(plugin: Plugin, element: HTMLEl
 	}
 }
 
+/**
+ * `getSectionInfo` 返回 null 时的兜底定位：在「这个代码块所属文件」的范围内
+ * （即最近的 `.markdown-embed-content` 祖先——B 被嵌入 A 时，B 的整篇渲染
+ * 内容都在这个容器下），数出 `embed` 是第几个 base 代码块。
+ *
+ * 用 `closest('.markdown-embed-content') === scope` 过滤掉「B 又嵌入了 C，
+ * C 里也有 base 代码块」这种更深层嵌套的干扰，确保序数只在 B 自己的
+ * 代码块之间计算，不会数进 C 的。
+ *
+ * 找不到 `.markdown-embed-content` 祖先（说明根本不在 embed 里，
+ * getSectionInfo 返回 null 另有原因）时返回 null，安全放弃兜底。
+ */
+function findEmbedOrdinal(embed: HTMLElement): number | null {
+	const scope = embed.closest<HTMLElement>('.markdown-embed-content');
+	if (!scope) return null;
+
+	const siblings = Array.from(scope.querySelectorAll<HTMLElement>(CODE_BLOCK_SELECTOR)).filter(
+		(el) => el.closest('.markdown-embed-content') === scope,
+	);
+
+	const index = siblings.indexOf(embed);
+	return index === -1 ? null : index;
+}
+
+/**
+ * 在 text 中找到第 ordinal 个（0-indexed）base 代码块的围栏起始行，返回其行号。
+ * 只是逐行做 `parseFenceLine` 匹配的「平铺」扫描，不追踪围栏嵌套关系——
+ * 如果某个无关代码块内部的示例文本里恰好有一行长得像 base 围栏，会被误数进去。
+ * 这是可接受的简化：即便误判，最坏结果也只是切换到相邻的另一个块，
+ * 且 `parseFenceLine` 校验仍会保证真正改写的那一行确实是合法围栏行。
+ */
+function findNthBaseFenceLineIndex(text: string, ordinal: number): number | null {
+	let count = 0;
+	let start = 0;
+	let lineIndex = 0;
+
+	while (true) {
+		const nl = text.indexOf('\n', start);
+		const end = nl === -1 ? text.length : nl;
+		const line = text.slice(start, end);
+
+		if (parseFenceLine(line)) {
+			if (count === ordinal) return lineIndex;
+			count++;
+		}
+
+		if (nl === -1) return null;
+		start = nl + 1;
+		lineIndex++;
+	}
+}
+
 /** 在 text 中定位第 lineIndex 行（0-indexed），返回该行内容及其在 text 中的起止偏移，避免把整份文档 split 成数组 */
 function getLineAt(text: string, lineIndex: number): { line: string; start: number; end: number } | null {
 	let start = 0;
@@ -73,6 +124,7 @@ function getLineAt(text: string, lineIndex: number): { line: string; start: numb
 }
 
 type FenceMatch = { start: number; end: number; prefix: string; tail: string; lineEnding: string };
+type FenceTarget = { line: string; start: number; end: number };
 
 /** 扫描整份文本，返回所有 base 围栏起始行及其在文本中的起止偏移（end 不含行尾的 \n，语义与 getLineAt 一致） */
 function findAllFences(text: string): FenceMatch[] {
@@ -118,6 +170,25 @@ function toggleFenceTail(tail: string): { newTail: string; newFlag: LockFlag } {
 	return { newTail, newFlag };
 }
 
+function locateFenceWithoutSectionInfo(
+	raw: string,
+	embed: HTMLElement,
+	ordinalIndex: number,
+	ordinalTotal: number,
+): FenceTarget | null {
+	const embedOrdinal = findEmbedOrdinal(embed);
+	if (embedOrdinal !== null) {
+		const lineIndex = findNthBaseFenceLineIndex(raw, embedOrdinal);
+		return lineIndex === null ? null : getLineAt(raw, lineIndex);
+	}
+
+	const fences = findAllFences(raw);
+	if (fences.length !== ordinalTotal || ordinalIndex >= fences.length) return null;
+
+	const fence = fences[ordinalIndex];
+	return { line: raw.slice(fence.start, fence.end), start: fence.start, end: fence.end };
+}
+
 async function isCodeBlockLocked(
 	plugin: Plugin,
 	ctx: MarkdownPostProcessorContext,
@@ -136,15 +207,18 @@ async function isCodeBlockLocked(
 		return isFenceLocked(parsed.tail);
 	}
 
-	// 没有行号信息（见文件头注释）：退化为「按出现顺序配对」兜底
 	const file = getOwningMarkdownFile(plugin, ctx);
 	if (!file) return false;
 
+	// 只是读取当前状态用于渲染图标，用 cachedRead 即可，不必每次都打磁盘 I/O
 	const raw = await plugin.app.vault.cachedRead(file);
-	const fences = findAllFences(raw);
-	if (fences.length !== ordinalTotal) return false;
+	const target = locateFenceWithoutSectionInfo(raw, embed, ordinalIndex, ordinalTotal);
+	if (!target) return false;
 
-	return isFenceLocked(fences[ordinalIndex].tail);
+	const parsed = parseFenceLine(target.line);
+	if (!parsed) return false;
+
+	return isFenceLocked(parsed.tail);
 }
 
 async function toggleCodeBlockLock(
@@ -162,29 +236,15 @@ async function toggleCodeBlockLock(
 
 	// 用磁盘上的最新内容做实际改写，而不是渲染缓存的 info.text 整份覆盖文件——
 	// 否则如果笔记里还有别的 embed 刚触发过写入，这里会用改写前的旧内容
-	// 覆盖回去，把那次修改静默丢掉。lineStart 仍按 getSectionInfo 给出的行号
-	// 定位；如果这期间上方内容发生了变化导致行号错位，下面的 parseFenceLine
-	// 校验会因为该行不再是合法围栏行而安全放弃，不会误改到无关内容。
+	// 覆盖回去，把那次修改静默丢掉。
 	const raw = await plugin.app.vault.read(file);
 
-	let target: { line: string; start: number; end: number } | null;
-	if (info) {
-		target = getLineAt(raw, info.lineStart);
-		if (!target) {
-			console.warn('[obsidian-bases-lock] Base code block line position is out of range, toggle skipped');
-			return;
-		}
-	} else {
-		// 没有行号信息（见文件头注释）：退化为「按出现顺序配对」兜底。
-		// 渲染批次与文件里的围栏数量对不上时，顺序对应关系不可信，
-		// 安全放弃而不是猜测，避免误改到错误的代码块。
-		const fences = findAllFences(raw);
-		if (fences.length !== ordinalTotal || ordinalIndex >= fences.length) {
-			console.warn('[obsidian-bases-lock] getSectionInfo unavailable and base code block count mismatched, toggle skipped to avoid touching the wrong one');
-			return;
-		}
-		const fence = fences[ordinalIndex];
-		target = { line: raw.slice(fence.start, fence.end), start: fence.start, end: fence.end };
+	const target = info
+		? getLineAt(raw, info.lineStart)
+		: locateFenceWithoutSectionInfo(raw, embed, ordinalIndex, ordinalTotal);
+	if (!target) {
+		console.warn('[obsidian-bases-lock] Could not locate this base code block, toggle skipped');
+		return;
 	}
 
 	const parsed = parseFenceLine(target.line);

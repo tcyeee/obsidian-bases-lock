@@ -1,3 +1,11 @@
+## Version 1.0.7
+
+- Fixed lock toggle not working for base code blocks rendered inside a note that is embedded into another note
+
+- 修复笔记被内嵌到其他笔记中时，其内的 base 代码块无法锁定切换的问题
+
+---
+
 ## Version 1.0.6
 
 - Enabled mobile support

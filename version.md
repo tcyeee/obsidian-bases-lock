@@ -1,3 +1,15 @@
+## Version 1.0.8
+
+- Enabled mobile support, and on mobile the unlock button stays visible while locked and shows only its icon
+- Fixed base code block lock toggling failing when `getSectionInfo` is unavailable, such as when a note is rendered by a sidebar preview
+- Fixed lock toggle not working for base code blocks rendered inside a note that is embedded into another note
+
+- 新增移动端支持，移动端锁定状态下解锁按钮常驻显示且仅保留图标
+- 修复 `getSectionInfo` 不可用时（如笔记被侧边栏预览单独渲染）base 代码块无法切换锁定的问题
+- 修复笔记被内嵌到其他笔记中时，其内的 base 代码块无法切换锁定的问题
+
+---
+
 ## Version 1.0.5
 
 - Fixed a locked Base staying stuck in its previous state when the `x`/`o` flag was edited by hand in the note

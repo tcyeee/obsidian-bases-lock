@@ -12,6 +12,6 @@ import { processCodeBlockBaseEmbeds } from './codeBlockBaseEmbed';
 export function registerBasesToolbarPostProcessor(plugin: Plugin): void {
 	plugin.registerMarkdownPostProcessor((element, ctx) => {
 		void processFileBaseEmbeds(plugin, element, ctx);
-		processCodeBlockBaseEmbeds(plugin, element, ctx);
+		void processCodeBlockBaseEmbeds(plugin, element, ctx);
 	});
 }

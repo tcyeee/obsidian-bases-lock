@@ -19,6 +19,15 @@ import { getOwningMarkdownFile } from './markdownFile';
  * 定位与改写该围栏行依赖 `ctx.getSectionInfo(el)`，它能返回当前元素
  * 对应源码片段的起止行号，从而精确修改「这一个」代码块，不影响同一
  * 笔记里的其他 base 代码块。
+ *
+ * `getSectionInfo` 官方文档注明它在很多情况下会返回 null——比如这篇笔记
+ * 不是由它自己的 Reading View 渲染，而是被其他插件（侧边栏预览、自定义
+ * 面板等）用 `MarkdownRenderer.render()` 单独渲染出来时。这种情况下退化
+ * 为「按出现顺序配对」兜底：这次渲染批次里这个 embed 是第几个
+ * `.block-language-base`，就对应文件源码里第几个 base 围栏——前提是这次
+ * 渲染批次里出现的代码块总数与文件里的围栏总数完全一致，否则说明这只是
+ * 笔记的局部片段，顺序对应关系不可信，直接安全放弃而不是瞎猜，避免误切
+ * 换到错误的代码块。
  */
 
 const CODE_BLOCK_SELECTOR = 'div.block-language-base';
@@ -27,22 +36,27 @@ const CODE_BLOCK_SELECTOR = 'div.block-language-base';
 // + 三个及以上的 ` 或 ~ + "base" + 词边界 + 其余部分（flag 等）
 const FENCE_LINE_RE = /^((?:\s*>)*\s*(?:`{3,}|~{3,}))base(?=\s|$)(.*)$/;
 
-export function processCodeBlockBaseEmbeds(plugin: Plugin, element: HTMLElement, ctx: MarkdownPostProcessorContext): void {
-	const embeds = element.querySelectorAll<HTMLElement>(CODE_BLOCK_SELECTOR);
+export async function processCodeBlockBaseEmbeds(plugin: Plugin, element: HTMLElement, ctx: MarkdownPostProcessorContext): Promise<void> {
+	const embeds = Array.from(element.querySelectorAll<HTMLElement>(CODE_BLOCK_SELECTOR));
 	if (embeds.length === 0) return;
 
-	embeds.forEach((embed) => {
-		const isHidden = isCodeBlockLocked(ctx, embed);
+	// 记录这次渲染批次里 base 代码块的总数，供 getSectionInfo 不可用时的
+	// 「按出现顺序配对」兜底使用（见文件头注释）
+	const batchTotal = embeds.length;
+
+	for (let ordinalIndex = 0; ordinalIndex < embeds.length; ordinalIndex++) {
+		const embed = embeds[ordinalIndex];
+		const isHidden = await isCodeBlockLocked(plugin, ctx, embed, ordinalIndex, batchTotal);
 
 		attachLockToggleUi(embed, ctx, isHidden, (evt) => {
 			evt.preventDefault();
 			evt.stopPropagation();
 
-			toggleCodeBlockLock(plugin, ctx, embed).catch((error) => {
+			toggleCodeBlockLock(plugin, ctx, embed, ordinalIndex, batchTotal).catch((error) => {
 				console.error('[obsidian-bases-lock] Failed to toggle base lock (code block)', error);
 			});
 		});
-	});
+	}
 }
 
 /** 在 text 中定位第 lineIndex 行（0-indexed），返回该行内容及其在 text 中的起止偏移，避免把整份文档 split 成数组 */
@@ -56,6 +70,25 @@ function getLineAt(text: string, lineIndex: number): { line: string; start: numb
 	const nl = text.indexOf('\n', start);
 	const end = nl === -1 ? text.length : nl;
 	return { line: text.slice(start, end), start, end };
+}
+
+type FenceMatch = { start: number; end: number; prefix: string; tail: string; lineEnding: string };
+
+/** 扫描整份文本，返回所有 base 围栏起始行及其在文本中的起止偏移（end 不含行尾的 \n，语义与 getLineAt 一致） */
+function findAllFences(text: string): FenceMatch[] {
+	const results: FenceMatch[] = [];
+	let pos = 0;
+	while (pos <= text.length) {
+		const nl = text.indexOf('\n', pos);
+		const end = nl === -1 ? text.length : nl;
+		const parsed = parseFenceLine(text.slice(pos, end));
+		if (parsed) {
+			results.push({ start: pos, end, prefix: parsed.prefix, tail: parsed.tail, lineEnding: parsed.lineEnding });
+		}
+		if (nl === -1) break;
+		pos = nl + 1;
+	}
+	return results;
 }
 
 function parseFenceLine(line: string): { prefix: string; tail: string; lineEnding: string } | null {
@@ -85,29 +118,47 @@ function toggleFenceTail(tail: string): { newTail: string; newFlag: LockFlag } {
 	return { newTail, newFlag };
 }
 
-function isCodeBlockLocked(ctx: MarkdownPostProcessorContext, embed: HTMLElement): boolean {
+async function isCodeBlockLocked(
+	plugin: Plugin,
+	ctx: MarkdownPostProcessorContext,
+	embed: HTMLElement,
+	ordinalIndex: number,
+	ordinalTotal: number,
+): Promise<boolean> {
 	const info = ctx.getSectionInfo(embed);
-	if (!info) return false;
+	if (info) {
+		const target = getLineAt(info.text, info.lineStart);
+		if (!target) return false;
 
-	const target = getLineAt(info.text, info.lineStart);
-	if (!target) return false;
+		const parsed = parseFenceLine(target.line);
+		if (!parsed) return false;
 
-	const parsed = parseFenceLine(target.line);
-	if (!parsed) return false;
+		return isFenceLocked(parsed.tail);
+	}
 
-	return isFenceLocked(parsed.tail);
+	// 没有行号信息（见文件头注释）：退化为「按出现顺序配对」兜底
+	const file = getOwningMarkdownFile(plugin, ctx);
+	if (!file) return false;
+
+	const raw = await plugin.app.vault.cachedRead(file);
+	const fences = findAllFences(raw);
+	if (fences.length !== ordinalTotal) return false;
+
+	return isFenceLocked(fences[ordinalIndex].tail);
 }
 
-async function toggleCodeBlockLock(plugin: Plugin, ctx: MarkdownPostProcessorContext, embed: HTMLElement): Promise<void> {
+async function toggleCodeBlockLock(
+	plugin: Plugin,
+	ctx: MarkdownPostProcessorContext,
+	embed: HTMLElement,
+	ordinalIndex: number,
+	ordinalTotal: number,
+): Promise<void> {
 	const file = getOwningMarkdownFile(plugin, ctx);
 	if (!file) return;
 
 	// 按照 API 建议，在真正需要时才调用 getSectionInfo，取到当下最新的行号信息
 	const info = ctx.getSectionInfo(embed);
-	if (!info) {
-		console.warn('[obsidian-bases-lock] getSectionInfo returned null for this base code block, toggle skipped');
-		return;
-	}
 
 	// 用磁盘上的最新内容做实际改写，而不是渲染缓存的 info.text 整份覆盖文件——
 	// 否则如果笔记里还有别的 embed 刚触发过写入，这里会用改写前的旧内容
@@ -115,10 +166,25 @@ async function toggleCodeBlockLock(plugin: Plugin, ctx: MarkdownPostProcessorCon
 	// 定位；如果这期间上方内容发生了变化导致行号错位，下面的 parseFenceLine
 	// 校验会因为该行不再是合法围栏行而安全放弃，不会误改到无关内容。
 	const raw = await plugin.app.vault.read(file);
-	const target = getLineAt(raw, info.lineStart);
-	if (!target) {
-		console.warn('[obsidian-bases-lock] Base code block line position is out of range, toggle skipped');
-		return;
+
+	let target: { line: string; start: number; end: number } | null;
+	if (info) {
+		target = getLineAt(raw, info.lineStart);
+		if (!target) {
+			console.warn('[obsidian-bases-lock] Base code block line position is out of range, toggle skipped');
+			return;
+		}
+	} else {
+		// 没有行号信息（见文件头注释）：退化为「按出现顺序配对」兜底。
+		// 渲染批次与文件里的围栏数量对不上时，顺序对应关系不可信，
+		// 安全放弃而不是猜测，避免误改到错误的代码块。
+		const fences = findAllFences(raw);
+		if (fences.length !== ordinalTotal || ordinalIndex >= fences.length) {
+			console.warn('[obsidian-bases-lock] getSectionInfo unavailable and base code block count mismatched, toggle skipped to avoid touching the wrong one');
+			return;
+		}
+		const fence = fences[ordinalIndex];
+		target = { line: raw.slice(fence.start, fence.end), start: fence.start, end: fence.end };
 	}
 
 	const parsed = parseFenceLine(target.line);

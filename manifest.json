@@ -3,7 +3,7 @@
 	"name": "Bases Lock",
 	"version": "1.0.8",
 	"minAppVersion": "1.9.0",
-	"description": "Hides the action bar at the top of the Bases view.",
+	"description": "Lock a Bases view to hide its toolbar and disable header interactions, protecting embedded Bases from accidental edits or sorting changes.",
 	"author": "tcyeee",
 	"isDesktopOnly": false
 }

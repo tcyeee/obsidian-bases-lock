@@ -1,14 +1,14 @@
 {
 	"name": "obsidian-bases-lock",
 	"version": "1.0.8",
-	"description": "Hides the action bar at the top of the Bases view.",
+	"description": "Lock a Bases view to hide its toolbar and disable header interactions, protecting embedded Bases from accidental edits or sorting changes.",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
 		"version": "node version-bump.mjs && git add manifest.json versions.json"
 	},
-	"keywords": [],
+	"keywords": ["obsidian", "obsidian-plugin", "obsidian-bases", "bases", "lock"],
 	"author": "tcyeee",
 	"license": "MIT",
 	"devDependencies": {

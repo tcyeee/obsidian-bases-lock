@@ -1,3 +1,5 @@
+# Bases Lock
+
 ![banner](./assets/banner.png)
 
 <div align="center">
@@ -18,7 +20,7 @@
 
 **Bases Lock** is a small Obsidian plugin that lets you **hide the Bases toolbar and disable header interaction** on demand, keeping the view clean and preventing accidental changes.
 
-**Note:** The plugin only works in **Reading view**, and is **desktop only**.
+**Note:** The plugin only works in **Reading view**, and runs on desktop and mobile.
 
 ![demo](./assets/1.gif)
 
